@@ -1,0 +1,13 @@
+{
+  "port": 3456,
+  "upstream": "https://api.anthropic.com",
+  "forceModel": "claude-opus-4-7",
+  "forceEffort": "xhigh",
+  "minMaxTokens": 32000,
+  "betaHeaders": ["interleaved-thinking-2025-05-14"],
+  "bypassPatterns": {
+    "modelContains": ["haiku"],
+    "maxTokensBelow": 512
+  },
+  "logLevel": "info"
+}
