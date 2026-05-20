@@ -1,8 +1,7 @@
 # tokenmaxxer
 
-A local proxy that forces every Claude Code request to use **Opus 4.7** with **`xhigh`** effort and **interleaved thinking**. The opposite of a cost-saving router.
+A local proxy that forces every Claude Code request to use **Opus 4.7** with **`max`** effort and **interleaved thinking**. The opposite of a cost-saving router.
 
-If you read that and thought *"nice, now read the warnings before you turn it on"* — good. [Skip to them.](#warnings)
 
 ---
 
@@ -39,7 +38,7 @@ ANTHROPIC_BASE_URL=http://127.0.0.1:3456 claude
 For every `POST /v1/messages`, before forwarding to `https://api.anthropic.com`:
 
 1. `model` → `claude-opus-4-7`
-2. `output_config.effort` → `xhigh`
+2. `output_config.effort` → `max`
 3. `thinking` → `{ "type": "adaptive" }`
 4. `anthropic-beta` header — append `interleaved-thinking-2025-05-14` (existing beta tokens are preserved)
 5. `max_tokens` — raised to `32000` if lower; left alone if already higher
@@ -57,7 +56,7 @@ Claude Code makes background calls (summarization, classification) that shouldn'
 Every bypass is logged so you can see what's being skipped:
 
 ```
-[14:23:01] POST /v1/messages → claude-opus-4-7 xhigh (was: claude-sonnet-4-6 medium) max_tokens=32000
+[14:23:01] POST /v1/messages → claude-opus-4-7 max (was: claude-sonnet-4-6 medium) max_tokens=32000
 [14:23:04] POST /v1/messages → BYPASS (model contains "haiku") claude-haiku-4-5 max_tokens=200
 ```
 
@@ -78,7 +77,7 @@ Defaults live in `config.json`:
   "port": 3456,
   "upstream": "https://api.anthropic.com",
   "forceModel": "claude-opus-4-7",
-  "forceEffort": "xhigh",
+  "forceEffort": "max",
   "minMaxTokens": 32000,
   "betaHeaders": ["interleaved-thinking-2025-05-14"],
   "bypassPatterns": {
@@ -110,10 +109,10 @@ curl -N http://127.0.0.1:3456/v1/messages \
 In the proxy's terminal you should see something like:
 
 ```
-[14:23:01] POST /v1/messages → claude-opus-4-7 xhigh (was: claude-sonnet-4-6 default) max_tokens=32000
+[14:23:01] POST /v1/messages → claude-opus-4-7 max (was: claude-sonnet-4-6 default) max_tokens=32000
 ```
 
-The body you asked for (Sonnet, 1024 tokens) got rewritten to Opus + xhigh + 32k before hitting Anthropic. If you instead see `BYPASS`, check that your `model` doesn't include `haiku` and `max_tokens` is above `512`.
+The body you asked for (Sonnet, 1024 tokens) got rewritten to Opus + max + 32k before hitting Anthropic. If you instead see `BYPASS`, check that your `model` doesn't include `haiku` and `max_tokens` is above `512`.
 
 Then try a request that *should* bypass:
 
@@ -164,7 +163,7 @@ Covers request rewriting, header append-not-clobber, max_tokens floor behavior, 
 
 **This proxy will substantially increase your token usage and API costs.** Read this section before you leave it running.
 
-- **Cost.** Opus 4.7 at `xhigh` is the most expensive configuration Anthropic sells. Expect roughly **10–50× the per-turn cost** vs. default Sonnet adaptive. A long agentic session that would have cost dollars can cost tens of dollars.
+- **Cost.** Opus 4.7 at `max` is the most expensive configuration Anthropic sells. Expect roughly **10–50× the per-turn cost** vs. default Sonnet adaptive. A long agentic session that would have cost dollars can cost tens of dollars.
 - **Rate limits.** On a Max subscription this will burn through weekly allowances *much* faster. On pay-per-token API access, **monitor your spending daily for the first week.** Set a billing alert before you start.
 - **Prompt cache invalidation.** Forcing a `thinking` block onto every request reduces cache hit rates. You'll pay full input-token cost on more turns than you would without the proxy. This compounds with long conversations.
 - **Diminishing returns.** Anthropic's own docs note that Claude often won't use the full thinking budget past ~32k tokens. "Max thinking" plateaus — you can pay 4× for the same answer.

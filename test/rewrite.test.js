@@ -4,12 +4,12 @@ import { rewriteBody, rewriteHeaders } from '../src/proxy.js';
 
 const config = {
   forceModel: 'claude-opus-4-7',
-  forceEffort: 'xhigh',
+  forceEffort: 'max',
   minMaxTokens: 32000,
   betaHeaders: ['interleaved-thinking-2025-05-14'],
 };
 
-test('Sonnet medium request → Opus xhigh adaptive', () => {
+test('Sonnet medium request → Opus max adaptive', () => {
   const body = {
     model: 'claude-sonnet-4-6',
     max_tokens: 8000,
@@ -18,7 +18,7 @@ test('Sonnet medium request → Opus xhigh adaptive', () => {
   };
   const result = rewriteBody(body, config);
   assert.equal(result.model, 'claude-opus-4-7');
-  assert.equal(result.output_config.effort, 'xhigh');
+  assert.equal(result.output_config.effort, 'max');
   assert.deepEqual(result.thinking, { type: 'adaptive' });
   assert.equal(result.max_tokens, 32000);
 });
@@ -48,7 +48,7 @@ test('preserves other output_config fields when injecting effort', () => {
     output_config: { effort: 'low', other_flag: true },
   };
   const result = rewriteBody(body, config);
-  assert.equal(result.output_config.effort, 'xhigh');
+  assert.equal(result.output_config.effort, 'max');
   assert.equal(result.output_config.other_flag, true);
 });
 

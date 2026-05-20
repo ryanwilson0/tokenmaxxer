@@ -1,6 +1,6 @@
 # Token-Maxxing Router for Claude Code
 
-A local proxy that forces every Claude Code request to use Opus 4.7 with `xhigh` effort and interleaved thinking. The opposite of a cost-saving router.
+A local proxy that forces every Claude Code request to use Opus 4.7 with `max` effort and interleaved thinking. The opposite of a cost-saving router.
 
 ## Goal
 
@@ -19,7 +19,7 @@ Claude Code connects by setting `ANTHROPIC_BASE_URL=http://127.0.0.1:3456`.
 On every incoming `/v1/messages` request, before forwarding:
 
 1. **Force model**: set `body.model = "claude-opus-4-7"`
-2. **Force effort**: set `body.output_config = { ...body.output_config, effort: "xhigh" }`
+2. **Force effort**: set `body.output_config = { ...body.output_config, effort: "max" }`
 3. **Force adaptive thinking**: set `body.thinking = { type: "adaptive" }`
 4. **Add interleaved thinking header**: append `interleaved-thinking-2025-05-14` to the `anthropic-beta` request header (comma-separated if other betas are already there; don't clobber)
 5. **Raise max_tokens floor**: if `body.max_tokens < 32000`, set it to `32000`. Don't lower it if it's already higher.
@@ -55,7 +55,7 @@ Single `config.json` file at the repo root, loaded at startup:
   "port": 3456,
   "upstream": "https://api.anthropic.com",
   "forceModel": "claude-opus-4-7",
-  "forceEffort": "xhigh",
+  "forceEffort": "max",
   "minMaxTokens": 32000,
   "betaHeaders": ["interleaved-thinking-2025-05-14"],
   "bypassPatterns": {
@@ -73,7 +73,7 @@ All values overridable by env vars: `PORT`, `UPSTREAM`, `FORCE_MODEL`, `FORCE_EF
 Plain stdout, one line per request:
 
 ```
-[14:23:01] POST /v1/messages → opus-4-7 xhigh (was: sonnet-4-6 medium) max_tokens=32000
+[14:23:01] POST /v1/messages → opus-4-7 max (was: sonnet-4-6 medium) max_tokens=32000
 [14:23:04] POST /v1/messages → BYPASS (haiku) sonnet-haiku-4-5 max_tokens=200
 ```
 
@@ -104,7 +104,7 @@ Use Node's built-in `node:test` and `node:http` — no Express, no extra deps be
 
 At minimum:
 
-- Rewrite test: given a Claude Code request body for Sonnet 4.6 medium, assert the output has Opus 4.7, xhigh, adaptive thinking, and the beta header.
+- Rewrite test: given a Claude Code request body for Sonnet 4.6 medium, assert the output has Opus 4.7, max, adaptive thinking, and the beta header.
 - Bypass test: given a request with `model: "claude-haiku-4-5"`, assert no rewrites are applied.
 - Bypass test: given `max_tokens: 200`, assert no rewrites.
 - Header test: if `anthropic-beta` already contains `prompt-caching-2024-07-31`, assert the interleaved header is appended, not replaced.
@@ -124,7 +124,7 @@ The README is for the user, not for Claude Code. It must include:
 >
 > This proxy will substantially increase your token usage and API costs. Specifically:
 >
-> - **Cost**: Opus 4.7 at xhigh is the most expensive configuration Anthropic sells. Expect 10-50x the per-turn cost vs. default Sonnet adaptive.
+> - **Cost**: Opus 4.7 at max is the most expensive configuration Anthropic sells. Expect 10-50x the per-turn cost vs. default Sonnet adaptive.
 > - **Rate limits**: On a Max subscription, this will exhaust weekly allowances dramatically faster. On pay-per-token API access, monitor your spending daily for the first week.
 > - **Prompt cache invalidation**: Forcing thinking config on every request reduces cache hit rates. You'll pay full input-token cost on more turns than you would without the proxy.
 > - **Diminishing returns**: Anthropic's docs note that Claude often won't use the full thinking budget past ~32k tokens. "Max thinking" plateaus.
@@ -154,7 +154,7 @@ The build is done when:
 
 1. `npm install && npm start` boots the proxy on port 3456
 2. Setting `ANTHROPIC_BASE_URL=http://127.0.0.1:3456` and running `claude` in another terminal produces working Claude Code sessions
-3. Every non-bypassed request shows the model upgraded to Opus 4.7 with xhigh in the logs
+3. Every non-bypassed request shows the model upgraded to Opus 4.7 with max in the logs
 4. Haiku and small-max_tokens background requests appear as `BYPASS` in the logs
 5. `node --test` passes all tests
 6. The README warnings are present and unmissable

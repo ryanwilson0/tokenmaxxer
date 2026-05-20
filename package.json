@@ -1,7 +1,7 @@
 {
   "name": "token-maxxer",
   "version": "0.1.0",
-  "description": "Local proxy that forces every Claude Code request to Opus 4.7 + xhigh + interleaved thinking.",
+  "description": "Local proxy that forces every Claude Code request to Opus 4.7 + max + interleaved thinking.",
   "type": "module",
   "main": "src/index.js",
   "scripts": {
