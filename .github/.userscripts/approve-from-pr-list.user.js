@@ -151,7 +151,7 @@
   }
 
   // Initial pass + re-inject across GitHub's client-side (Turbo) navigation
-  // and incremental list updates.
+  // and incremental list updates
   inject();
   const observer = new MutationObserver(() => inject());
   observer.observe(document.body, { childList: true, subtree: true });
